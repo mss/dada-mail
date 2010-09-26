@@ -22,7 +22,7 @@ our @EXPORT = qw(
 );
 
 use Time::HiRes qw(time usleep);
-use constant FLOCK_WAIT => .5;
+use constant FLOCK_WAIT => 500;
 use constant FLOCK_SLEEP => 100;
 
 use Carp qw(carp croak);
@@ -91,7 +91,7 @@ sub open
 sub flock
 {
   my($self, $op) = @_;
-  my $stop = time() + FLOCK_WAIT;
+  my $stop = time() + FLOCK_WAIT / 1000;
   do {
     return 1 if flock($self, $op | LOCK_NB);
     usleep(FLOCK_SLEEP);
