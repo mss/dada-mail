@@ -66,7 +66,7 @@ sub open
 	croak("missing mode") unless $mode;
 	
 	# mode: r|r+|w|w+|a|a+ [b|u|h] [t]
-	#  * read, read/write, write, write/read, append, append/read
+	#  * read, read/write, write, write/read, append, append/read (cf. fopen(3))
 	#  * binary, utf8, HTML_CHARSET
 	#  * flock timeout (ms), 0 disable flock
 	my($openmode, $binmode, $wait) = ($mode =~ /^([rwa][+]?)([buh])?(\d+)?$/);
