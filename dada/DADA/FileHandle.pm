@@ -28,6 +28,11 @@ our @EXPORT = qw(
 use Time::HiRes qw(time usleep);
 use constant FLOCK_WAIT => 500;
 use constant FLOCK_SLEEP => 100;
+# Return early on Solaris since LOCK_EX locking seems to be broken 
+# on some systems (cf. description of lockf implementation
+# in perldoc -f flock).  BTW:  This seems to be fixed at least
+# on 'SunOS x 5.10 Generic_139556-08 i86pc i386 i86pc'
+use constant FLOCK_ENABLED => $^O ne 'solaris';
 
 use Carp qw(carp croak);
 
@@ -131,11 +136,7 @@ sub getname
 
 sub flock
 {
-	# Return early on Solaris since LOCK_EX locking seems to be broken 
-	# on some systems (cf. description of lockf implementation
-	# in perldoc -f flock).  BTW:  This seems to be fixed at least
-	# on 'SunOS x 5.10 Generic_139556-08 i86pc i386 i86pc'
-	return -1 if $^O eq 'solaris';
+	return -1 unless FLOCK_ENABLED;
 
 	my($self, $op, $wait) = @_;
 	croak("missing op") unless defined $op;
