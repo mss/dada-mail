@@ -10,6 +10,7 @@ use Test::More qw(no_plan);
 
 BEGIN{$ENV{NO_DADA_MAIL_CONFIG_IMPORT} = 1}
 use dada_test_config; 
+$DADA::Config::FILE_CHMOD = 0660;
 
 use DADA::FileHandle;
 

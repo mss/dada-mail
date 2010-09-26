@@ -62,6 +62,9 @@ sub open
 	my $fh = $self->SUPER::open($file, $openmode);
 	return _err("failed to open $file ($openmode): $!") unless $fh;
 	
+	chmod($DADA::Config::FILE_CHMOD, $file) ||
+		return _err("failed to chmod $file: $!");
+	
 	if ($binmode) {
 		if ($binmode eq "b") {
 			$self->binmode(":raw") ||
@@ -104,5 +107,6 @@ sub flock
 	} while (time() < $stop);
 	return 0;
 }
+
 
 1;
