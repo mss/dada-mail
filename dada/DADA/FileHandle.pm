@@ -96,13 +96,13 @@ sub open
 
 sub flock
 {
-  my($self, $op) = @_;
-  my $stop = time() + FLOCK_WAIT / 1000;
-  do {
-    return 1 if flock($self, $op | LOCK_NB);
-    usleep(FLOCK_SLEEP);
-  } while (time() < $stop);
-  return 0;
+	my($self, $op) = @_;
+	my $stop = time() + FLOCK_WAIT / 1000;
+	do {
+		return 1 if flock($self, $op | LOCK_NB);
+		usleep(FLOCK_SLEEP);
+	} while (time() < $stop);
+	return 0;
 }
 
 1;
