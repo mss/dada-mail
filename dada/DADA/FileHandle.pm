@@ -31,8 +31,12 @@ use Carp qw(carp croak);
 sub new
 {
 	my $class = shift;
-
+	
+	my $file = shift;
+	croak("missing file") unless $file;
+	
 	my $self = $class->SUPER::new();
+	${*self}{dada_file} = $file;
 	bless $self, $class;
 	
 	return $self->open(@_) if (@_);
@@ -41,11 +45,13 @@ sub new
 
 sub open
 {
-	my ($self, $file, $mode, $errhandler) = @_;
+	my ($self, $mode, $errhandler) = @_;
 	croak("missing mode") unless $mode;
 	
 	my($openmode, $binmode) = ($mode =~ /^([rwa][+]?)([buh])?$/);
 	croak("invalid mode $mode") unless $openmode;
+	
+	my $file = ${*self}{dada_file};
 	
 	sub _err {
 		$self->close();
