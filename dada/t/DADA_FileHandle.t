@@ -67,7 +67,7 @@ $ret = $fh1->getline();
 is($ret, 'DADA', 'utf16');
 $ret = t2("close file", $fh1, 'close');
 
-$fh1 = t2("new file (1)", DADAFH, 'new', $f1);
+$fh1 = t1("new file (1)", DADAFH, 'new', $f1);
 $ret = t3("lock file (1)", $fh1, 'lock', 100);
 $fh1 = t1("open file (1:r1)", $fh1, 'open', 'r1');
 $ret = t3("lock file (1)", $fh1, 'lock', 100);
@@ -82,14 +82,17 @@ $ret = t2("lock file (1)", $fh1, 'lock', 1000);
 $ret = t2("close file (1)", $fh1, 'close');
 
 
+our $err = undef;
+
 sub t1
 {
   my  $txt = shift;
   my  $ref = shift;
   my  $sub = shift;
-  our $err = undef;
   diag("--> next: $txt");
-  my $ret = $ref->$sub(@_, sub { $err = shift; });
+  my $arg = shift;
+  $err = undef;
+  my $ret = $ref->$sub($arg, sub { $err = shift; }, @_);
   diag((defined($ret) ? $ret : "undef") . ($ref ne DADAFH and $ref->can('getname') ? " (" . $ref->getname() . ")" : ""));
   is($err, undef, $txt);
   return $ret;

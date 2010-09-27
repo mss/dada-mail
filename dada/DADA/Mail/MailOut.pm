@@ -492,9 +492,7 @@ sub create_total_sending_out_num {
     my $file = $self->dir . '/' . $file_names->{num_sending_to};
        $file = make_safer($file); 
 
-    my $fh = DADA::FileHandle->new($file);
-    $fh->lock();
-    $fh->open('w', DADA::FileHandle::CROAK);
+    my $fh = DADA::FileHandle->new($file, 'wl');
     $fh->print($self->total_sending_out_num)
         or croak("failed to write to $file: $!");
     $fh->close()
@@ -517,7 +515,7 @@ sub create_log_file {
     my $file = $self->dir . '/' . $file_names->{'log'};
        $file = make_safer($file); 
 
-    my $fh = DADA::FileHandle->new($file, 'ah', DADA::FileHandle::CROAK);
+    my $fh = DADA::FileHandle->new($file, 'ah');
     $fh->close()
         or croak("failed to close $file: $!");
     
@@ -537,9 +535,7 @@ sub create_counter {
     my $file = $self->dir . '/' . $file_names->{counter};
        $file = make_safer($file);
 
-    my $fh = DADA::FileHandle->new($file);
-    $fh->lock();
-    $fh->open('w', DADA::FileHandle::CROAK);
+    my $fh = DADA::FileHandle->new($file, 'wl');
     $fh->print(0);
     $fh->close()
         or croak "failed to close $file: $!";
@@ -561,9 +557,7 @@ sub create_first_accessed_file {
     my $file = $self->dir . '/' . $file_names->{first_access};
        $file = make_safer($file);
 
-    my $fh = DADA::FileHandle->new($file);
-    $fh->lock();
-    $fh->open('w', DADA::FileHandle::CROAK);
+    my $fh = DADA::FileHandle->new($file, 'wl');
     $fh->print(time());
     $fh->close()
         or croak "failed to close $file: $!";
@@ -582,9 +576,7 @@ sub create_last_accessed_file {
     my $file = $self->dir . '/' . $file_names->{last_access};
        $file = make_safer($file);
 
-    my $fh = DADA::FileHandle->new($file);
-    $fh->lock();
-    $fh->open('w', DADA::FileHandle::CROAK);
+    my $fh = DADA::FileHandle->new($file, 'wl');
     $fh->print(time());
     $fh->close()
         or croak "failed to close $file: $!";
@@ -600,9 +592,7 @@ sub create_batch_lock {
     my $file = $self->dir . '/' . $file_names->{batchlock};
        $file = make_safer($file);
     
-    my $fh = DADA::FileHandle->new($file);
-    $fh->lock();
-    $fh->open('w', DADA::FileHandle::CROAK);
+    my $fh = DADA::FileHandle->new($file, 'wl');
     $fh->print(time());
     $fh->close()
         or croak "failed to close $file: $!";
@@ -626,9 +616,7 @@ sub countsubscriber {
  
     my $file = make_safer($self->dir . '/' . $file_names->{counter});
     
-    my $fh = DADA::FileHandle->new($file);
-    $fh->lock();
-    $fh->open('w', DADA::FileHandle::CROAK);
+    my $fh = DADA::FileHandle->new($file, 'wl');
     $fh->print($new_count);
     $fh->close()
         or croak("failed to close $file: $!");
@@ -639,9 +627,7 @@ sub countsubscriber {
 
     my $file2 = make_safer($self->dir . '/' . $file_names->{last_access});
 
-    $fh = DADA::FileHandle->new($file2);
-    $fh->lock();
-    $fh->open('w', DADA::FileHandle::CROAK);
+    $fh = DADA::FileHandle->new($file2, 'wl');
     $fh->print(time());
     $fh->close()
         or croak("failed to close $file: $!");
@@ -669,9 +655,7 @@ sub pause {
     }
     else { 
     	my $file = $self->dir . '/' . $file_names->{pause}; 
-        my $fh = DADA::FileHandle->new($file);
-        $fh->lock();
-        $fh->open('w', DADA::FileHandle::CROAK);
+        my $fh = DADA::FileHandle->new($file, 'wl');
         $fh->print(time());
         $fh->close()
             or croak("failed to close $file: $!");
@@ -708,9 +692,7 @@ sub set_controlling_pid {
 	warn "Switching controlling pid from: $old_pid to: $pid"
 		if $t;
 
-    my $fh = DADA::FileHandle->new($file);
-    $fh->lock();
-    $fh->open('w', DADA::FileHandle::CROAK);
+    my $fh = DADA::FileHandle->new($file, 'wl');
     $fh->print($pid);
     $fh->close()
         or croak("failed to close $file: $!");
@@ -797,10 +779,7 @@ sub create_raw_message {
 
     my $msg;
 
-    my $fh = DADA::FileHandle->new($file);
-    $fh->lock();
-    $fh->open('ah', DADA::FileHandle::CROAK);
-	my $lock = $self->lock_file($file);
+    my $fh = DADA::FileHandle->new($file, 'ahl');
 
 
     foreach (@DADA::Config::EMAIL_HEADERS_ORDER) {

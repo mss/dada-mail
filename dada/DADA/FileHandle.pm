@@ -35,19 +35,36 @@ use constant FLOCK_SLEEP => 100;
 use constant FLOCK_ENABLED => $^O ne 'solaris';
 
 use Carp qw(carp croak);
-use constant CARP => \&carp;
-use constant CROAK => \&croak;
+use constant RETURN => sub { };
+use constant CARP   => \&carp;
+use constant CROAK  => \&croak;
 
+# TODO: Use ${*$self}{errh} everywhere, override
+# print etc., see perldoc File::IO
+
+# usage: new($file, [$errh,] [$mode])
+#  * $file is required
+#  * $errh is a reference to the error handler
+#    to be called when something goes haywire.
+#    default: Carp::croak;
+#  * if $mode is given, the file is opened, see open
 sub new
 {
 	my $class = shift;
 	
 	my $file = shift;
 	croak("missing file") unless $file;
+	my $errh = shift;
+	if (defined($errh) && !ref($errh)) {
+		unshift(@_, $errh);
+		$errh = undef;
+	}
+	$errh ||= E_CROAK;
 	
 	my $self = $class->SUPER::new();
 	${*$self}{dada_file} = $file;
 	${*$self}{dada_lock} = undef;
+	${*$self}{dada_errh} = $errh;
 	bless $self, $class;
 	
 	return $self->open(@_) if (@_);
@@ -63,22 +80,30 @@ sub DESTROY
 
 sub open
 {
-	my ($self, $mode, $errhandler) = @_;
+	my($self, $mode) = @_;
 	croak("missing mode") unless $mode;
+	my $file = ${*$self}{dada_file};
+	my $errh = ${*$self}{dada_errh};
 	
-	# mode: r|r+|w|w+|a|a+ [b|u|h] [t]
+	# mode: r|r+|w|w+|a|a+ [b|u|h] [$t] [l[$t]]
 	#  * read, read/write, write, write/read, append, append/read (cf. fopen(3))
 	#  * binary, utf8, HTML_CHARSET
 	#  * flock timeout (ms), 0 disable flock
-	my($openmode, $binmode, $wait) = ($mode =~ /^([rwa][+]?)([buh])?(\d+)?$/);
+	#  * lock before open, optional wait time
+	# eg.: open('r+h100l')
+	my($openmode, $binmode, $wait, $lock) = ($mode =~ /^([rwa][+]?)([buh])?(\d+)?([l]\d*)?$/);
 	croak("invalid mode $mode") unless $openmode;
 	$wait = FLOCK_WAIT unless defined $wait;
 	
-	my $file = ${*$self}{dada_file};
+	if (defined($lock)) {
+		$lock =~ /^l(\d*)$/;
+		my $ret = $self->lock($1 || 0);
+		return $ret unless $ret;
+	}
 	
 	sub _err {
 		$self->close();
-		$errhandler->(@_) if $errhandler;
+		$errh->(@_) if $errh;
 		return undef;
 	}
 	
@@ -187,6 +212,7 @@ sub lock
 		usleep(FLOCK_SLEEP * 1000);
 	}
 	
+	# TODO: Use ${*$self}{errh} here
 	croak("failed to lock $file: $!");
 	return 0;
 }
