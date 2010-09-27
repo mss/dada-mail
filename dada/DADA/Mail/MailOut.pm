@@ -7,16 +7,7 @@ use lib qw(../../ ../../DADA ../../perllib);
 use CGI::Carp qw(croak carp);
 
 use Fcntl qw(
-
     :DEFAULT
-    :flock
-    LOCK_SH
-	
-    O_RDONLY
-    O_CREAT
-    O_WRONLY
-    O_TRUNC
-
 );
 
 my $dbi_obj;
@@ -26,6 +17,8 @@ my $t = $DADA::Config::DEBUG_TRACE->{DADA_Mail_MailOut};
 
 use DADA::App::Guts;
 use DADA::Logging::Usage;
+
+use DADA::FileHandle;
 
 my $log = new DADA::Logging::Usage;
 
@@ -498,20 +491,15 @@ sub create_total_sending_out_num {
 
     my $file = $self->dir . '/' . $file_names->{num_sending_to};
        $file = make_safer($file); 
-    
-	my $lock = $self->lock_file($file);
 
-    sysopen( COUNTER, $file, O_WRONLY | O_TRUNC | O_CREAT, $DADA::Config::FILE_CHMOD  )
-        or croak
-        "Couldn't create the counter of how many subscribers I need to send to at: '$file' because: $!";
-    print COUNTER $self->total_sending_out_num
-        or croak "Couldn't write to: '" . $file . "' because: " . $!;
-    close(COUNTER)
-        or croak "'" . $file . "' didn't close poperly because: " . $!;
-		
-	$self->unlock_file($lock);
+    my $fh = DADA::FileHandle->new($file);
+    $fh->lock();
+    $fh->open('w', DADA::FileHandle::CROAK);
+    $fh->print($self->total_sending_out_num)
+        or croak("failed to write to $file: $!");
+    $fh->close()
+        or croak("failed to close $file: $!");
 
-    chmod($DADA::Config::FILE_CHMOD, $file);    
     warn 'num_sending_to file created at ' . $file . ' and given value of: ' . $self->total_sending_out_num
         if $t; 
     
@@ -528,17 +516,11 @@ sub create_log_file {
 
     my $file = $self->dir . '/' . $file_names->{'log'};
        $file = make_safer($file); 
+
+    my $fh = DADA::FileHandle->new($file, 'ah', DADA::FileHandle::CROAK);
+    $fh->close()
+        or croak("failed to close $file: $!");
     
-    open(LOG, '>>:encoding(' . $DADA::Config::HTML_CHARSET . ')',  $file  )
-        or croak
-        "Couldn't create the log file at: '"
-        . $file
-        . " 'because: "
-        . $!;
-  
-    close(LOG)
-        or croak " didn't close '$file' poperly because: " . $!;
-    chmod($DADA::Config::FILE_CHMOD, $file);    
     warn 'log file created at ' . $file
         if $t; 
     
@@ -555,17 +537,13 @@ sub create_counter {
     my $file = $self->dir . '/' . $file_names->{counter};
        $file = make_safer($file);
 
-	my $lock = $self->lock_file($file);
-	
-    sysopen( COUNTER, $file, O_WRONLY | O_TRUNC | O_CREAT, $DADA::Config::FILE_CHMOD  )
-        or croak "couldn't open counter at: '$file' because: $!";
-    print COUNTER '0';
-    close(COUNTER)
-       or croak "couldn't close counter at: '$file' because: $!";
+    my $fh = DADA::FileHandle->new($file);
+    $fh->lock();
+    $fh->open('w', DADA::FileHandle::CROAK);
+    $fh->print(0);
+    $fh->close()
+        or croak "failed to close $file: $!";
 
-	$self->unlock_file($lock);
-
-    chmod($DADA::Config::FILE_CHMOD, $file);     
     warn 'counter created at ' . $file
         if $t; 
         
@@ -583,20 +561,16 @@ sub create_first_accessed_file {
     my $file = $self->dir . '/' . $file_names->{first_access};
        $file = make_safer($file);
 
-	my $lock = $self->lock_file($file);
+    my $fh = DADA::FileHandle->new($file);
+    $fh->lock();
+    $fh->open('w', DADA::FileHandle::CROAK);
+    $fh->print(time());
+    $fh->close()
+        or croak "failed to close $file: $!";
 
-    sysopen( ACCESS, $file, O_WRONLY | O_TRUNC | O_CREAT, $DADA::Config::FILE_CHMOD  )
-        or croak "Couldn't open '$file' because: " . $!;
-    print ACCESS time;
-    close(ACCESS)
-        or croak "Couldn't close '$file' because: " . $!;
-
-	$self->unlock_file($lock);
-	
-    chmod($DADA::Config::FILE_CHMOD, $file);     
     warn 'create_first_accessed_file created at ' . $file
         if $t; 
-
+    return 1;
 }
 
 
@@ -608,17 +582,13 @@ sub create_last_accessed_file {
     my $file = $self->dir . '/' . $file_names->{last_access};
        $file = make_safer($file);
 
-	my $lock = $self->lock_file($file);
+    my $fh = DADA::FileHandle->new($file);
+    $fh->lock();
+    $fh->open('w', DADA::FileHandle::CROAK);
+    $fh->print(time());
+    $fh->close()
+        or croak "failed to close $file: $!";
 
-    sysopen( ACCESS, $file, O_WRONLY | O_TRUNC | O_CREAT, $DADA::Config::FILE_CHMOD  )
-        or croak "Couldn't open '$file' because: " . $!;
-    print ACCESS time;
-    close(ACCESS)
-        or croak "Couldn't close '$file' because: " . $!;
-
-	$self->unlock_file($lock);
-
-	chmod($DADA::Config::FILE_CHMOD, $file); 
     warn 'create_last_accessed_file created at ' . $file
         if $t; 
     return 1; 
@@ -629,19 +599,15 @@ sub create_batch_lock {
     my $self = shift;
     my $file = $self->dir . '/' . $file_names->{batchlock};
        $file = make_safer($file);
-	
-	my $lock = $self->lock_file($file);
-	
-    sysopen( BATCHLOCK, $file, O_WRONLY | O_TRUNC | O_CREAT, $DADA::Config::FILE_CHMOD  )
-        or croak "Couldn't open, '$file' because: " . $!;
-    print BATCHLOCK time;
-    close(BATCHLOCK)
-        or croak "Couldn't close, '$file' because: " . $!;
-	
-	$self->unlock_file($lock);
-	
-	chmod($DADA::Config::FILE_CHMOD, $file); 
-	warn 'create_batch_lock created at ' . $file
+    
+    my $fh = DADA::FileHandle->new($file);
+    $fh->lock();
+    $fh->open('w', DADA::FileHandle::CROAK);
+    $fh->print(time());
+    $fh->close()
+        or croak "failed to close $file: $!";
+
+    warn 'create_batch_lock created at ' . $file
         if $t; 
     return 1; 
     
@@ -656,70 +622,29 @@ sub countsubscriber {
     my $self = shift;
 
     my $num = _poll( $self->dir . '/' . $file_names->{counter} );
+    my $new_count = $num + 1;
  
-	my $file = make_safer($self->dir . '/' . $file_names->{counter});
-	
-	
-	my $lock = $self->lock_file($file);
-	
-    sysopen( FH, $file, O_RDWR | O_CREAT, $DADA::Config::FILE_CHMOD)
-        or croak "can't open '$file' because: $!";
-
-	if($^O =~ /solaris/g){ 
-	     flock( FH, LOCK_SH ) 
-		        or croak "can't flock '$file' because: $!";
-	}
-	else { 
-		flock( FH, LOCK_EX ) 
-			or croak "can't flock '$file' because: $!";	
-	}
-
-
-
-   
-
-    seek( FH, 0, 0 )            or croak "can't rewind counter: $!";
-    truncate( FH, 0 )           or croak "can't truncate counter: $!";
-    my $new_count = $num + 1; 
-    print FH $new_count, "\n"   or croak "can't write counter: $!";
-    close FH                    or croak "can't close counter: $!";
-
-	$self->unlock_file($lock);
-	
-
+    my $file = make_safer($self->dir . '/' . $file_names->{counter});
+    
+    my $fh = DADA::FileHandle->new($file);
+    $fh->lock();
+    $fh->open('w', DADA::FileHandle::CROAK);
+    $fh->print($new_count);
+    $fh->close()
+        or croak("failed to close $file: $!");
 
 #######
 # DEV: And then something totally different - what?
 # (should be its own method)
 
-	my $file2 = make_safer($self->dir . '/' . $file_names->{last_access});
-	
-	my $lock2 = $self->lock_file($file2);
-	
-    sysopen( FH,
-        $file2,
-        O_RDWR | O_CREAT, 
-		$DADA::Config::FILE_CHMOD
-    ) or croak "can't open '$file2' because: $!";
- 
+    my $file2 = make_safer($self->dir . '/' . $file_names->{last_access});
 
-    if ( $^O =~ /solaris/g ) {
-        flock( FH, LOCK_SH )
-          or croak "can't flock '$file2'  because: $!";
-    }
-    else {
-        flock( FH, LOCK_EX )
-          or croak "can't flock '$file2'  because: $!";
-    }
-
-
-    seek( FH, 0, 0 ) or croak "can't rewind counter: $!";
-    truncate( FH, 0 ) or croak "can't truncate counter: $!";
-    ( print FH time, "\n" ) or croak "can't write counter: $!";
-    close FH                or croak "can't close counter: $!";
-
-	$self->unlock_file($lock2);
-	
+    $fh = DADA::FileHandle->new($file2);
+    $fh->lock();
+    $fh->open('w', DADA::FileHandle::CROAK);
+    $fh->print(time());
+    $fh->close()
+        or croak("failed to close $file: $!");
 
     ######
     # DEV: and then back to where we were...
@@ -744,33 +669,12 @@ sub pause {
     }
     else { 
     	my $file = $self->dir . '/' . $file_names->{pause}; 
-
-		my $lock = $self->lock_file($file);
-		
-        sysopen( FH,
-            $file,
-            O_RDWR | O_CREAT, 
-			$DADA::Config::FILE_CHMOD
-        ) or croak "can't open '$file' because: $!";
-		
-		if($^O =~ /solaris/g){ 
-			flock( FH, LOCK_SH )    
-				or croak "can't flock '$file' because: $!";		
-		}
-		else { 
-			flock( FH, LOCK_EX )
-				or croak "can't flock '$file' because: $!";	
-		}
-        
-    
-        seek( FH, 0, 0 )        or croak "can't rewind pause: $!";
-        truncate( FH, 0 )       or croak "can't truncate pause: $!";
-        ( print FH time, "\n" ) or croak "can't write pause: $!";
-        close FH;
-
-		$self->unlock_file($lock);
-		
-		chmod($DADA::Config::FILE_CHMOD, $file);   
+        my $fh = DADA::FileHandle->new($file);
+        $fh->lock();
+        $fh->open('w', DADA::FileHandle::CROAK);
+        $fh->print(time());
+        $fh->close()
+            or croak("failed to close $file: $!");
         
 		$self->log('Mailing Paused.'); 
 		
@@ -801,25 +705,15 @@ sub set_controlling_pid {
 	#	carp "No pid file, yet"; 
 	}
 
-
-	my $lock = $self->lock_file($file);
-
 	warn "Switching controlling pid from: $old_pid to: $pid"
 		if $t;
 
-	open my $pid_fh, '>', $file
-		or croak "can't open '$file' because: $!";
-		
-	flock( $pid_fh, LOCK_SH ) 
-	        or croak "can't flock '$file' because: $!";
-		
-	print $pid_fh $pid;
-	close $pid_fh                    
-		or croak "can't close file '$file' because $!";
-		
-	$self->unlock_file($lock);
-
-	chmod($DADA::Config::FILE_CHMOD, $file); 
+    my $fh = DADA::FileHandle->new($file);
+    $fh->lock();
+    $fh->open('w', DADA::FileHandle::CROAK);
+    $fh->print($pid);
+    $fh->close()
+        or croak("failed to close $file: $!");
 	
 	return $pid; 
 
@@ -903,27 +797,23 @@ sub create_raw_message {
 
     my $msg;
 
+    my $fh = DADA::FileHandle->new($file);
+    $fh->lock();
+    $fh->open('ah', DADA::FileHandle::CROAK);
 	my $lock = $self->lock_file($file);
-	
-    open( MESSAGE, '>>:encoding(' . $DADA::Config::HTML_CHARSET . ')', $file )
-        or croak "couldn't open: '$file' because: $!";
+
 
     foreach (@DADA::Config::EMAIL_HEADERS_ORDER) {
         next if $_ eq 'Body';
         next if $_ eq 'Message';    # Do I need this?!
-        print MESSAGE $_ . ': ' . $fields->{$_} . "\n"
+        $fh->print($_ . ': ' . $fields->{$_} . "\n")
             if ( ( defined $fields->{$_} ) && ( $fields->{$_} ne "" ) );
     }
-
-    print MESSAGE "\n" . $fields->{Body};
-
-    close MESSAGE
-        or die "Couldn't close: " . $file . "because: " . $!;
-
-	$self->unlock_file($lock);
-	
-	
-    chmod($DADA::Config::FILE_CHMOD, $file); 
+    $fh->print("\n" . $fields->{Body});
+    
+    $fh->print($pid);
+    $fh->close()
+        or croak("failed to close $file: $!");
 
     warn 'create_raw_message  at ' . $file
         if $t; 
