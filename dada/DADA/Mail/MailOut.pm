@@ -493,10 +493,8 @@ sub create_total_sending_out_num {
        $file = make_safer($file); 
 
     my $fh = DADA::FileHandle->new($file, 'wl');
-    $fh->print($self->total_sending_out_num)
-        or croak("failed to write to $file: $!");
-    $fh->close()
-        or croak("failed to close $file: $!");
+    $fh->print($self->total_sending_out_num);
+    $fh->close();
 
     warn 'num_sending_to file created at ' . $file . ' and given value of: ' . $self->total_sending_out_num
         if $t; 
@@ -516,8 +514,7 @@ sub create_log_file {
        $file = make_safer($file); 
 
     my $fh = DADA::FileHandle->new($file, 'ah');
-    $fh->close()
-        or croak("failed to close $file: $!");
+    $fh->close();
     
     warn 'log file created at ' . $file
         if $t; 
@@ -537,8 +534,7 @@ sub create_counter {
 
     my $fh = DADA::FileHandle->new($file, 'wl');
     $fh->print(0);
-    $fh->close()
-        or croak "failed to close $file: $!";
+    $fh->close();
 
     warn 'counter created at ' . $file
         if $t; 
@@ -559,8 +555,7 @@ sub create_first_accessed_file {
 
     my $fh = DADA::FileHandle->new($file, 'wl');
     $fh->print(time());
-    $fh->close()
-        or croak "failed to close $file: $!";
+    $fh->close();
 
     warn 'create_first_accessed_file created at ' . $file
         if $t; 
@@ -578,8 +573,7 @@ sub create_last_accessed_file {
 
     my $fh = DADA::FileHandle->new($file, 'wl');
     $fh->print(time());
-    $fh->close()
-        or croak "failed to close $file: $!";
+    $fh->close();
 
     warn 'create_last_accessed_file created at ' . $file
         if $t; 
@@ -594,8 +588,7 @@ sub create_batch_lock {
     
     my $fh = DADA::FileHandle->new($file, 'wl');
     $fh->print(time());
-    $fh->close()
-        or croak "failed to close $file: $!";
+    $fh->close();
 
     warn 'create_batch_lock created at ' . $file
         if $t; 
@@ -618,8 +611,7 @@ sub countsubscriber {
     
     my $fh = DADA::FileHandle->new($file, 'wl');
     $fh->print($new_count);
-    $fh->close()
-        or croak("failed to close $file: $!");
+    $fh->close();
 
 #######
 # DEV: And then something totally different - what?
@@ -629,8 +621,7 @@ sub countsubscriber {
 
     $fh = DADA::FileHandle->new($file2, 'wl');
     $fh->print(time());
-    $fh->close()
-        or croak("failed to close $file: $!");
+    $fh->close();
 
     ######
     # DEV: and then back to where we were...
@@ -657,8 +648,7 @@ sub pause {
     	my $file = $self->dir . '/' . $file_names->{pause}; 
         my $fh = DADA::FileHandle->new($file, 'wl');
         $fh->print(time());
-        $fh->close()
-            or croak("failed to close $file: $!");
+        $fh->close();
         
 		$self->log('Mailing Paused.'); 
 		
@@ -694,8 +684,7 @@ sub set_controlling_pid {
 
     my $fh = DADA::FileHandle->new($file, 'wl');
     $fh->print($pid);
-    $fh->close()
-        or croak("failed to close $file: $!");
+    $fh->close();
 	
 	return $pid; 
 
@@ -781,7 +770,6 @@ sub create_raw_message {
 
     my $fh = DADA::FileHandle->new($file, 'ahl');
 
-
     foreach (@DADA::Config::EMAIL_HEADERS_ORDER) {
         next if $_ eq 'Body';
         next if $_ eq 'Message';    # Do I need this?!
@@ -789,10 +777,8 @@ sub create_raw_message {
             if ( ( defined $fields->{$_} ) && ( $fields->{$_} ne "" ) );
     }
     $fh->print("\n" . $fields->{Body});
-    
-    $fh->print($pid);
-    $fh->close()
-        or croak("failed to close $file: $!");
+
+    $fh->close();
 
     warn 'create_raw_message  at ' . $file
         if $t; 

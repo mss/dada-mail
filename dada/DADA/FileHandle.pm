@@ -35,12 +35,12 @@ use constant FLOCK_SLEEP => 100;
 use constant FLOCK_ENABLED => $^O ne 'solaris';
 
 use Carp qw(carp croak);
-use constant RETURN => sub { };
+use constant RETURN => sub { 0 };
 use constant CARP   => \&carp;
 use constant CROAK  => \&croak;
 
 # TODO: Use ${*$self}{errh} everywhere, override
-# print etc., see perldoc File::IO
+# getline etc., see perldoc File::IO
 
 # usage: new($file, [$errh,] [$mode])
 #  * $file is required
@@ -74,7 +74,19 @@ sub new
 sub DESTROY
 {
 	my($self) = @_;
-	$self->close();
+	$self->close(-1);
+}
+
+sub E
+{
+	my $self = shift;
+	my $errh = ${*$self}{dada_errh};
+	my $eret = shift;
+	
+	$self->close(-1);
+	
+	$errh->(@_) if $errh;
+	return $eret;
 }
 
 
@@ -83,7 +95,6 @@ sub open
 	my($self, $mode) = @_;
 	croak("missing mode") unless $mode;
 	my $file = ${*$self}{dada_file};
-	my $errh = ${*$self}{dada_errh};
 	
 	# mode: r|r+|w|w+|a|a+ [b|u|h] [$t] [l[$t]]
 	#  * read, read/write, write, write/read, append, append/read (cf. fopen(3))
@@ -101,41 +112,35 @@ sub open
 		return $ret unless $ret;
 	}
 	
-	sub _err {
-		$self->close();
-		$errh->(@_) if $errh;
-		return undef;
-	}
-	
 	my $fh = $self->SUPER::open($file, $openmode);
-	return _err("failed to open $file ($openmode): $!") unless $fh;
+	return $self->E(undef, "failed to open $file ($openmode): $!") unless $fh;
 	
 	chmod($DADA::Config::FILE_CHMOD, $file) ||
-		return _err("failed to chmod $file: $!");
+		return $self->E(undef, "failed to chmod $file: $!");
 	
 	if ($binmode) {
 		if ($binmode eq "b") {
 			$self->binmode(":raw") ||
-				return _err("failed to set binary encoding for $file: $!");
+				return $self->E(undef, "failed to set binary encoding for $file: $!");
 		}
 		elsif ($binmode eq "u") {
 			$self->binmode(":encoding(utf8)") ||
-				return _err("failed to set UTF-8 encoding for $file: $!");
+				return $self->E(undef, "failed to set UTF-8 encoding for $file: $!");
 		}
 		elsif ($binmode eq "h") {
 			$self->binmode(":encoding(" . $DADA::Config::HTML_CHARSET . ")") ||
-				return _err("failed to set HTML_CHARSET encoding for $file: $!");
+				return $self->E(undef, "failed to set HTML_CHARSET encoding for $file: $!");
 		}
 	}
 	
 	if ($wait) {
 		if ($openmode eq 'r') {
 			$self->flock(LOCK_SH, $wait) ||
-				return _err("failed to flock $file (sh): $!");
+				return $self->E(undef, "failed to flock $file (sh): $!");
 		}
 		else {
 			$self->flock(LOCK_EX, $wait) ||
-				return _err("failed to flock $file (ex): $!");
+				return $self->E(undef, "failed to flock $file (ex): $!");
 		}
 	}
 	
@@ -144,12 +149,40 @@ sub open
 
 sub close
 {
-	my($self) = @_;
+	my $self = shift;
+	my $stop = shift;
+	my $file = ${*$self}{dada_file};
 	
 	$self->unlock();
 	
 	return -1 unless $self->opened();
-	return $self->SUPER::close();
+	
+	my $ret = $self->SUPER::close();
+	return $ret if $ret;
+	return $ret if $stop;
+	return $self->E($ret, "failed to close $file: $1");
+}
+
+
+sub print
+{
+	my $self = shift;
+	my $file = ${*$self}{dada_file};
+	
+	my $ret = $self->SUPER::print(@_);
+	return $ret if $ret;
+	return $self->E($ret, "failed to write to $file: $1");
+}
+
+sub printline
+{
+	my $self = shift;
+	
+	foreach my $line (@_) {
+		my $ret = $self->print($line . "\n");
+		return $ret unless $ret;
+	}
+	return 1;
 }
 
 
@@ -179,7 +212,6 @@ sub flock
 	}
 	
 	$! = $bang;
-	
 	return 0;
 }
 
@@ -212,9 +244,7 @@ sub lock
 		usleep(FLOCK_SLEEP * 1000);
 	}
 	
-	# TODO: Use ${*$self}{errh} here
-	croak("failed to lock $file: $!");
-	return 0;
+	return $self->E(0, "failed to lock $file: $!");
 }
 
 sub unlock
@@ -227,7 +257,7 @@ sub unlock
 	
 	$lock->close();
 	unlink($lock->getname()) ||
-		croak("failed to unlock $file: $!");
+		$self->E(0, "failed to unlock $file: $!");
 	
 	${*$self}{dada_lock} = undef;
 	return 1;
