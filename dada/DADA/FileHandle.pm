@@ -59,7 +59,7 @@ sub new
 		unshift(@_, $errh);
 		$errh = undef;
 	}
-	$errh ||= E_CROAK;
+	$errh ||= CROAK;
 	
 	my $self = $class->SUPER::new();
 	${*$self}{dada_file} = $file;
