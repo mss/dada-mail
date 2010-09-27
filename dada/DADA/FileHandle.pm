@@ -35,7 +35,8 @@ use constant FLOCK_SLEEP => 100;
 use constant FLOCK_ENABLED => $^O ne 'solaris';
 
 use Carp qw(carp croak);
-
+use constant CARP => \&carp;
+use constant CROAK => \&croak;
 
 sub new
 {
