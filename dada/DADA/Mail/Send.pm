@@ -1384,10 +1384,10 @@ sub mass_send {
 			if($^O =~ /solaris/g){ 
 			    # DEV For whatever reason (anyone?) Solaris DOES NOT like this type of locking. More research has be done..
 			
-			    flock(MAILLIST, LOCK_SH) or $somethings_wrong = 1;
+			    #flock(MAILLIST, LOCK_SH) or $somethings_wrong = 1;
 			}
 			else { 
-                flock(MAILLIST, LOCK_EX) or $somethings_wrong = 1; 
+				#flock(MAILLIST, LOCK_EX) or $somethings_wrong = 1; 
 			}
 
             if($somethings_wrong == 1){ 

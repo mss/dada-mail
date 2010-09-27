@@ -68,7 +68,7 @@ sub add {
     open my $LIST, '>>', $file
       or croak "couldn't open $file for reading: $!\n";
 
-    flock( $LIST, 2 );
+    #flock( $LIST, 2 );
 
     chomp( $args->{ -email } );
     $args->{ -email } = strip( $args->{ -email } );

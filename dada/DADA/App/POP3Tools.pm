@@ -202,7 +202,7 @@ sub _lock_pop3_check {
 	{
 		my $sleep_count = 0; 
 		{ 
-			flock $POP3_SAFETYLOCK, LOCK_EX | LOCK_NB and last; 
+			last;#flock $POP3_SAFETYLOCK, LOCK_EX | LOCK_NB and last; 
 			sleep 1;
 			redo if ++$sleep_count < 11; 		
 			croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Warning: Server is way too busy to open semaphore file , " . _lockfile_name($args) . " -   $!\n";

@@ -71,7 +71,7 @@ sub r_log {
 	    	if -e $self->clickthrough_log_location; 
 		open(LOG, '>>:encoding(' . $DADA::Config::HTML_CHARSET . ')', $self->clickthrough_log_location) 
 			or warn "Couldn't open file: '" . $self->clickthrough_log_location . '\'because: ' .  $!;
-		flock(LOG, LOCK_SH);
+		#flock(LOG, LOCK_SH);
 		print LOG scalar(localtime()) . "\t" . $mid . "\t" . $url . "\n"  or warn "Couldn't write to file: " . $self->clickthrough_log_location . 'because: ' .  $!; 
 		close (LOG)  or warn "Couldn't close file: " . $self->clickthrough_log_location . 'because: ' .  $!;
 		return 1; 
@@ -90,7 +90,7 @@ sub o_log {
 	    	if -e $self->clickthrough_log_location; 
 		open(LOG, '>>:encoding(' . $DADA::Config::HTML_CHARSET . ')' ,  $self->clickthrough_log_location)
 			or warn "Couldn't open file: '" . $self->clickthrough_log_location . '\'because: ' .  $!;
-		flock(LOG, LOCK_SH);
+		#flock(LOG, LOCK_SH);
 		print LOG scalar(localtime()) . "\t" . $mid . "\t" . 'open' . "\n";
 		close (LOG);
 		return 1; 
@@ -109,7 +109,7 @@ sub sc_log {
 	    	if -e $self->clickthrough_log_location; 
 		open(LOG, '>>:encoding(' . $DADA::Config::HTML_CHARSET . ')',  $self->clickthrough_log_location)
 			or warn "Couldn't open file: '" . $self->clickthrough_log_location . '\'because: ' .  $!;
-		flock(LOG, LOCK_SH);
+		#flock(LOG, LOCK_SH);
 		print LOG scalar(localtime()) . "\t" . $mid . "\t" . 'num_subscribers' . "\t" . $sc . "\n";
 		close (LOG);
 		return 1; 
@@ -128,7 +128,7 @@ sub bounce_log {
 	    	if -e $self->clickthrough_log_location; 
 		open(LOG, '>>:encoding(' . $DADA::Config::HTML_CHARSET . ')',  $self->clickthrough_log_location)
 			or warn "Couldn't open file: '" . $self->clickthrough_log_location . '\'because: ' .  $!;
-		flock(LOG, LOCK_SH);
+		#flock(LOG, LOCK_SH);
 		print LOG scalar(localtime()) . "\t" . $mid . "\t" . 'bounce' . "\t" . $email . "\n";
 		close (LOG);
 		return 1; 

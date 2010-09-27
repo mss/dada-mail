@@ -1001,7 +1001,7 @@ sub create_mass_sending_file {
       or croak
 "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: Cannot create temporary email list file for sending out bulk message: $!";
     chmod( $SENDINGFILE, $DADA::Config::FILE_CHMOD );
-    flock( $SENDINGFILE, LOCK_EX );
+    #flock( $SENDINGFILE, LOCK_EX );
 
     my $first_email = $self->{ls}->param('list_owner_email');
     if ( $args{'-Bulk_Test'} == 1 && $args{ -Test_Recipient } ) {

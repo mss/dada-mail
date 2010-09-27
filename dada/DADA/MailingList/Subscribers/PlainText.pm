@@ -79,7 +79,7 @@ sub open_list_handle {
 	
 	sysopen(LIST, $path_to_file, O_RDWR|O_CREAT, $DADA::Config::FILE_CHMOD ) 
 	    or croak "couldn't open '$path_to_file' for reading: $!\n";
-		   flock(LIST, LOCK_SH);
+    		#flock(LIST, LOCK_SH);
 		binmode LIST, ':encoding(' . $DADA::Config::HTML_CHARSET . ')';
 }
 
@@ -475,13 +475,13 @@ sub remove_from_list {
 				#flock(DBLOCK, LOCK_SH)   or croak "can't LOCK_SH $LCK: $!";
 				
 				# from 2.8.15 
-				# flock SAFETYLOCK, LOCK_EX | LOCK_NB and last; 
+				#flock SAFETYLOCK, LOCK_EX | LOCK_NB and last; 
 				
 				# NB = non blocking
 				# I don't think you can have a non blocking and an exclusing block
 				# in the same breadth...?
 				
-				flock SAFETYLOCK, LOCK_EX | LOCK_NB and last; 
+				last;#flock SAFETYLOCK, LOCK_EX | LOCK_NB and last; 
 				
 				sleep 1;
 				redo if ++$sleep_count < 11; 
@@ -507,13 +507,13 @@ sub remove_from_list {
 		#open the original list
 		sysopen(MAIN_LIST, $main_list,  O_RDWR|O_CREAT, $DADA::Config::FILE_CHMOD ) or 
 			croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: Can't open email list to sort through and make deletions at '$main_list': $!";
-		flock(MAIN_LIST, LOCK_SH) or 
+		#flock(MAIN_LIST, LOCK_SH) or 
 			croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: Can't create a shared lock to sort through and make deletions at '$main_list': $!";
 	  
 		# open a temporary list
 		sysopen(TEMP_LIST, $temp_list,  O_RDWR|O_CREAT, $DADA::Config::FILE_CHMOD ) or 
 			croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: can't create temporary list to sort out deleted e-mails at '$temp_list': $!" ; 
-		flock(TEMP_LIST, LOCK_EX) or
+		#flock(TEMP_LIST, LOCK_EX) or
 			croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: can't create an exculsive lock to sort out deleted e-mails at'$temp_list': $!" ; 	
 			
 		my $check_this; 
@@ -551,13 +551,13 @@ sub remove_from_list {
 	
 		sysopen(TEMP_LIST, $temp_list,  O_RDWR|O_CREAT, $DADA::Config::FILE_CHMOD ) or 
 			croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: Can't open temp email list '$temp_list' to copy over to the main list : $!";
-		flock(TEMP_LIST, LOCK_SH) or 
-			croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: Can't create a shared lock to copy over email addresses at  '$temp_list': $!";
+		#flock(TEMP_LIST, LOCK_SH) or 
+		#	croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: Can't create a shared lock to copy over email addresses at  '$temp_list': $!";
 
 		sysopen(MAIN_LIST, $main_list,  O_WRONLY|O_TRUNC|O_CREAT, $DADA::Config::FILE_CHMOD ) or 
 			croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: can't open email list to update '$main_list': $!" ; 
-		flock(MAIN_LIST, LOCK_EX) or
-			croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: can't create an exclusive lock to update '$main_list': $!" ; 	
+		#flock(MAIN_LIST, LOCK_EX) or
+		#	croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: can't create an exclusive lock to update '$main_list': $!" ; 	
 			
 			
 		my $passed_email;	
@@ -673,13 +673,13 @@ sub create_mass_sending_file {
 	sysopen(LISTFILE, "$list_file",  O_RDONLY|O_CREAT, $DADA::Config::FILE_CHMOD ) or 
 		croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: Cannot open email list for copying, in preparation to send out bulk message: $! "; 
 	binmode LISTFILE, ':encoding(' . $DADA::Config::HTML_CHARSET . ')';
-	flock(LISTFILE, LOCK_SH); 
+	#flock(LISTFILE, LOCK_SH); 
 		
 	open my $SENDINGFILE, '>', $sending_file or
 		croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: Cannot create temporary email list file for sending out bulk message: $!"; 
 	binmode $SENDINGFILE, ':encoding(' . $DADA::Config::HTML_CHARSET . ')';
 	chmod($DADA::Config::FILE_CHMOD, $SENDINGFILE); 	
-	flock($SENDINGFILE, LOCK_EX);	
+	#flock($SENDINGFILE, LOCK_EX);	
 
 
     my $first_email = $li->{list_owner_email}; 
@@ -743,7 +743,6 @@ sub create_mass_sending_file {
 		}		
 	}
 
-	# why aren't I using: flock(LISTFILE), LOCK_UN); ? I think it's because it's not needed, if close(LISTFILE) is called...
 	close(LISTFILE) 
 		or croak ("$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error - could not close list file '$list_file'  successfully"); 
 	

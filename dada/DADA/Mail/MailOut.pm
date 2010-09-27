@@ -666,12 +666,12 @@ sub countsubscriber {
         or croak "can't open '$file' because: $!";
 
 	if($^O =~ /solaris/g){ 
-	     flock( FH, LOCK_SH ) 
-		        or croak "can't flock '$file' because: $!";
+		#flock( FH, LOCK_SH ) 
+		#        or croak "can't flock '$file' because: $!";
 	}
 	else { 
-		flock( FH, LOCK_EX ) 
-			or croak "can't flock '$file' because: $!";	
+		#flock( FH, LOCK_EX ) 
+		#	or croak "can't flock '$file' because: $!";	
 	}
 
 
@@ -704,12 +704,12 @@ sub countsubscriber {
  
 
     if ( $^O =~ /solaris/g ) {
-        flock( FH, LOCK_SH )
-          or croak "can't flock '$file2'  because: $!";
+	    #flock( FH, LOCK_SH )
+	    #or croak "can't flock '$file2'  because: $!";
     }
     else {
-        flock( FH, LOCK_EX )
-          or croak "can't flock '$file2'  because: $!";
+	    #flock( FH, LOCK_EX )
+	    #or croak "can't flock '$file2'  because: $!";
     }
 
 
@@ -754,12 +754,12 @@ sub pause {
         ) or croak "can't open '$file' because: $!";
 		
 		if($^O =~ /solaris/g){ 
-			flock( FH, LOCK_SH )    
-				or croak "can't flock '$file' because: $!";		
+			#flock( FH, LOCK_SH )    
+			#	or croak "can't flock '$file' because: $!";		
 		}
 		else { 
-			flock( FH, LOCK_EX )
-				or croak "can't flock '$file' because: $!";	
+			#flock( FH, LOCK_EX )
+			#	or croak "can't flock '$file' because: $!";	
 		}
         
     
@@ -810,8 +810,8 @@ sub set_controlling_pid {
 	open my $pid_fh, '>', $file
 		or croak "can't open '$file' because: $!";
 		
-	flock( $pid_fh, LOCK_SH ) 
-	        or croak "can't flock '$file' because: $!";
+	#flock( $pid_fh, LOCK_SH ) 
+	#        or croak "can't flock '$file' because: $!";
 		
 	print $pid_fh $pid;
 	close $pid_fh                    
@@ -1623,8 +1623,8 @@ sub _poll {
 
     sysopen( FH, $file, O_RDWR | O_CREAT, $DADA::Config::FILE_CHMOD ) 
 		or die "can't open counter: $!";
-    flock( FH, LOCK_SH ) 
-		or die "can't flock counter: $!";
+	#flock( FH, LOCK_SH ) 
+	#	or die "can't flock counter: $!";
 		
    #my $num = <FH>;
    # readline alone is 10x faster?!
@@ -1889,7 +1889,7 @@ sub lock_file {
 		my $count = 0;
 		{
 	
-		flock $fh, LOCK_EX | LOCK_NB and last; 
+		last;#flock $fh, LOCK_EX | LOCK_NB and last; 
 		
 		
 		sleep 1; 
@@ -2130,7 +2130,7 @@ sub log {
 
 	open(MO_LOG, '>>:encoding(' . $DADA::Config::HTML_CHARSET . ')', $file) 
 		or carp $!; 
-	flock(MO_LOG, LOCK_SH);
+	#flock(MO_LOG, LOCK_SH);
 	print MO_LOG "[$time]\t$log\n";
 	close(MO_LOG);  
 	

@@ -416,8 +416,8 @@ sub make_template {
 		open(TEMPLATE, '>:encoding(' . $DADA::Config::HTML_CHARSET . ')', $list_path .'/' . $list_template . '.' . 'template') or 
 			croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: can't write new template at '$list_path/$list_template.template': $!"; 
 	
-		flock(TEMPLATE, LOCK_EX) or 
-			croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: can't lock to write new template at '$list_path/$list_template.template': $!" ; 
+		#flock(TEMPLATE, LOCK_EX) or 
+		#	croak "$DADA::Config::PROGRAM_NAME $DADA::Config::VER Error: can't lock to write new template at '$list_path/$list_template.template': $!" ; 
 		
 		print TEMPLATE $print_template;
 		
@@ -1946,7 +1946,7 @@ sub make_all_list_files {
 		# make email list file
 		open(LIST, '>>:encoding(' . $DADA::Config::HTML_CHARSET . ')', "$DADA::Config::FILES/$list.list")
 			or croak "couldn't open $DADA::Config::FILES/$list.list for reading: $!\n";
-		flock(LIST, LOCK_SH);
+		#flock(LIST, LOCK_SH);
 		close (LIST);
 		
 		#chmod!
@@ -1955,7 +1955,7 @@ sub make_all_list_files {
 		# make e-mail blacklist file
 		open(LIST, '>>:encoding(' . $DADA::Config::HTML_CHARSET . ')', "$DADA::Config::FILES/$list.black_list")
 			or croak "couldn't open $DADA::Config::FILES/$list.black_list for reading: $!\n";
-		flock(LIST, LOCK_SH);
+		#flock(LIST, LOCK_SH);
 		close (LIST);
 		#chmod!
 		chmod($DADA::Config::FILE_CHMOD , "$DADA::Config::FILES/$list.black_list"); 	 
